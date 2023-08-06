@@ -1,0 +1,53 @@
+@using Sandbox;
+@using Sandbox.UI;
+
+@namespace MapPicker
+@inherits RootPanel
+@attribute [StyleSheet]
+@using System.Collections.Generic;
+@using System.Linq;
+@using System.Text.Json;
+
+<style>
+    .root-container{
+        pointer-events: all;
+    }
+
+    .map-button {
+        padding: 5px;
+        margin: 5px;
+        background-color: #555;
+        color: white;
+    }
+</style>
+
+<root class="root-container">
+    @foreach (var map in MapVote.maps)
+    {
+        <button @onclick=@( () => Vote.VoteForMap(map.MapId) ) class="map-button">@map.MapName (Votes: @MapVote.votes[map.MapId])</button>
+    }
+</root>
+
+@code
+{
+
+    public static List<MapInfo> maps { get; private set; }
+    public static Dictionary<string, int> votes { get; private set; }
+
+    public MapVote(List<MapInfo> mapInfos, Dictionary<string, int> mapVotes)
+    {
+        // Use the provided mapInfos and mapVotes directly
+        maps = mapInfos ?? new List<MapInfo>();
+        votes = mapVotes ?? new Dictionary<string, int>();
+    }
+
+
+[ClientRpc]
+public static void UpdateMapVote(string serializedMapVotes)
+    {
+   // Deserialize the JSON string back to a dictionary
+    var deserializedVotes = JsonSerializer.Deserialize<Dictionary<string, int>>(serializedMapVotes);
+
+    MapVote.votes = deserializedVotes;
+    }
+}
