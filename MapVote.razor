@@ -74,13 +74,13 @@
     <div class="child-container">
         <div class="timer">@TimeRemaining Seconds Remaining..</div>
         <div class="maps-container">
-            @for (int i = 0; i <MapVote.maps.Count; i += 3)
+            @for (int i = 0; i < MapVote.Maps.Count; i += 3)
             {
-                @foreach (var map in MapVote.maps.Skip(i).Take(3))
+                @foreach (var map in MapVote.Maps.Skip(i).Take(3))
                 {
-                    <div @onclick=@( () => Vote.VoteForMap(map.MapId) ) class="map-container">
+                    <div @onclick=@( () => Vote.VoteForMap(map.MapId) ) class="map-container" style="background-image: url('@map.MapImage')">>
                         <button class="map-button">@map.MapName</button>
-                        <span class="vote-count">@MapVote.votes[map.MapId]</span>
+                        <span class="vote-count">@MapVote.Votes[map.MapId]</span>
                     </div>
                 }
             }
@@ -91,20 +91,20 @@
 @code
 {
     public static MapVote Instance { get; private set; }
-    public static List<MapInfo> maps { get; private set; }
-    public static Dictionary<string, int> votes { get; private set; }
+    public static List<MapInfo> Maps { get; private set; }
+    public static Dictionary<string, int> Votes { get; private set; }
     public static string TimeRemaining { get; private set; }
+    public static Panel CurrentControl;
 
     public MapVote(List<MapInfo> mapInfos, Dictionary<string, int> mapVotes)
     {
-
-
         // Use the provided mapInfos and mapVotes directly
-        MapVote.maps = mapInfos ?? new List<MapInfo>();
-        MapVote.votes = mapVotes ?? new Dictionary<string, int>();
+        MapVote.Maps = mapInfos ?? new List<MapInfo>();
+        MapVote.Votes = mapVotes ?? new Dictionary<string, int>();
 
         // Set the static instance
         MapVote.Instance = this;
+        MapPicker.MapVote.CurrentControl = this;
     }
 
     [ClientRpc]
@@ -113,10 +113,8 @@
         // Deserialize the JSON string back to a dictionary
         var deserializedVotes = JsonSerializer.Deserialize<Dictionary<string, int>>(serializedMapVotes);
 
-        Log.Info("Time called 2 was " + Time.Now);
 
-        MapVote.votes = deserializedVotes;
-
+        MapVote.Votes = deserializedVotes;
         // There can be a 0.1 - 2 second delay before the UI updates without this
         MapVote.Instance?.StateHasChanged();
     }
@@ -125,11 +123,16 @@
     [ClientRpc]
     public static void UpdateVoteTimeRemaining(float timeRemaining)
     {
-        var formattedFloat  = timeRemaining.ToString("0.0");
-        Log.Info($"UI time remaining: {formattedFloat}");
+        var formattedFloat = timeRemaining.ToString("0.0");
 
         MapVote.TimeRemaining = formattedFloat;
         // UI doesn't update at all without this
         MapVote.Instance?.StateHasChanged();
+    }
+
+    [ClientRpc]
+    public static void EndVote()
+    {
+        MapPicker.MapVote.CurrentControl.Delete();
     }
 }

@@ -1,9 +1,7 @@
 using Sandbox;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-// using System.Timers;
 
 namespace MapPicker
 {
@@ -11,7 +9,7 @@ namespace MapPicker
   {
     public string MapName;
     public string MapId;
-
+    public string MapImage;
   }
 
   public static class Vote
@@ -30,7 +28,7 @@ namespace MapPicker
 
     public static void Init(List<MapInfo> maps)
     {
-      Log.Info("Init Maps");
+      Log.Info("Initializing maps in MapPicker");
       MapInfos.Clear(); // Clear existing data before adding new maps
       foreach (var map in maps)
       {
@@ -41,7 +39,7 @@ namespace MapPicker
 
     public static void BeginVote(int voteTime)
     {
-      Log.Info("Begin Vote");
+      Log.Info("Beginning Vote");
       Vote.VoteTime = voteTime;
       Vote.voteInProgress = true;
 
@@ -52,8 +50,6 @@ namespace MapPicker
           MapInfos,
           MapVotes
         );
-        Game.RootPanel = CurrentHud;
-
       }
     }
 
@@ -69,31 +65,25 @@ namespace MapPicker
       {
         Log.Info($"Time since vote started: {timeSinceVoteStarted} has exceeded vote time: {Vote.VoteTime}");
         EndVote();
-
       }
       else
       {
         var remainingTime = Vote.VoteTime - timeSinceVoteStarted;
-        Log.Info($"Time since vote started: {timeSinceVoteStarted} has not exceeded vote time: {Vote.VoteTime} remaining time: {remainingTime}");
         MapVote.UpdateVoteTimeRemaining(remainingTime);
       }
     }
 
     public static void EndVote()
     {
-      Log.Info("Removed Panel");
-      // Todo find correct way to remove panel
-      Game.RootPanel = null;
-
       Vote.voteInProgress = false;
       var mapWithMostVotes = GetMapWithMostVotes();
       Event.Run("MapPicker.VoteFinished", mapWithMostVotes.MapId);
+      MapVote.EndVote();
     }
 
     [ConCmd.Server]
     public static void VoteForMap(string mapId)
     {
-      Log.Info("Clicked Vote!");
       var clientId = ConsoleSystem.Caller.ToString();
 
       if (clientId == null)
@@ -122,8 +112,6 @@ namespace MapPicker
       ClientVotes[clientId] = mapId; // Save vote against the clientId
                                      // increment vote count for the new voted map
       MapVotes[mapId]++;
-
-      Log.Info("Time called 1 was" + Time.Now);
       string serializedMapVotes = JsonSerializer.Serialize(MapVotes);
       MapVote.UpdateMapVote(serializedMapVotes);
 
@@ -138,11 +126,6 @@ namespace MapPicker
         var mapId = ClientVotes[clientId];
         MapVotes[mapId]--;
         ClientVotes.Remove(clientId);
-        Log.Info($"Client {clientId} disconnected, removed vote for {mapId}");
-      }
-      else
-      {
-        Log.Info($"Client {clientId} disconnected, no vote to remove");
       }
     }
 
@@ -150,7 +133,6 @@ namespace MapPicker
     private static void ClientJoined(ClientJoinedEvent e)
     {
       var clientId = e.Client.ToString();
-      Log.Info("Client Joined: " + clientId);
     }
 
     public static List<MapInfo> GetMaps() // Changed the return type to List<MapInfo>
