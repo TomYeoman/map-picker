@@ -92,21 +92,24 @@ namespace MapPicker
     private static void ClientDisconnect(ClientDisconnectEvent e)
     {
       var clientId = e.Client.ToString();
-
       if (ClientVotes.ContainsKey(clientId))
       {
         var mapId = ClientVotes[clientId];
         MapVotes[mapId]--;
         ClientVotes.Remove(clientId);
+        Log.Info($"Client {clientId} disconnected, removed vote for {mapId}");
       }
-
-      Log.Info(e.Client);
+      else
+      {
+        Log.Info($"Client {clientId} disconnected, no vote to remove");
+      }
     }
 
     [GameEvent.Server.ClientJoined]
     private static void ClientJoined(ClientJoinedEvent e)
     {
-      Log.Info(e.Client);
+      var clientId = e.Client.ToString();
+      Log.Info("Client Joined: " + clientId);
     }
 
     public static List<MapInfo> GetMaps() // Changed the return type to List<MapInfo>
