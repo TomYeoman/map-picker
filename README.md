@@ -28,6 +28,7 @@ public void OnVoteFinished( string mapId )
 **Roadmap**
 - Add image support for maps.
 - Add optional "Replay" or "Random" buttons.
+- Add maps on the fly as admin via CMD.
 - Ability to scale vote depending on client ID (useful for VIP, or scaling based on player level).
 
 **Contribute**
