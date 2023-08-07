@@ -7,20 +7,38 @@
 @using System.Collections.Generic;
 @using System.Linq;
 @using System.Text.Json;
+
 <style>
 
     .child-container{
         pointer-events: all;
+        width: 80vw;
+        height: 80vh;
+        margin:auto;
+        background-color: rgba(0,0,0,0.3);
+        padding-top: 25px;
+        padding-left: 50px;
+        padding-right: 50px;
+        padding-bottom: 50px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: white;
+    }
+
+    .timer {
+         padding-bottom:25px;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 30px;
+    }
+
+    .maps-container{
         display: flex;
         flex-wrap: wrap;
         flex-direction: row;
         justify-content: space-between;
-        width: 80vw;
-        height: 80vh;
-        margin:auto;
         overflow-y: scroll;
-        background-color: rgba(0,0,0,0.3);
-        padding: 50px;
     }
 
     .map-container {
@@ -32,7 +50,6 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
     }
 
     .map-container:hover {
@@ -55,33 +72,40 @@
 
 <root class="root-container">
     <div class="child-container">
-
-        @for (int i = 0; i < MapVote.maps.Count; i += 3)
-        {
-            @foreach (var map in MapVote.maps.Skip(i).Take(3))
+        <div class="timer">@TimeRemaining Seconds Remaining..</div>
+        <div class="maps-container">
+            @for (int i = 0; i <MapVote.maps.Count; i += 3)
             {
-                <div @onclick=@( () => Vote.VoteForMap(map.MapId) ) class="map-container">
-                    <button class="map-button">@map.MapName</button>
-                    <span class="vote-count">@MapVote.votes[map.MapId]</span>
-                </div>
+                @foreach (var map in MapVote.maps.Skip(i).Take(3))
+                {
+                    <div @onclick=@( () => Vote.VoteForMap(map.MapId) ) class="map-container">
+                        <button class="map-button">@map.MapName</button>
+                        <span class="vote-count">@MapVote.votes[map.MapId]</span>
+                    </div>
+                }
             }
-        }
+        </div>
     </div>
 </root>
 
 @code
 {
-
+    public static MapVote Instance { get; private set; }
     public static List<MapInfo> maps { get; private set; }
     public static Dictionary<string, int> votes { get; private set; }
+    public static string TimeRemaining { get; private set; }
 
     public MapVote(List<MapInfo> mapInfos, Dictionary<string, int> mapVotes)
     {
-        // Use the provided mapInfos and mapVotes directly
-        maps = mapInfos ?? new List<MapInfo>();
-        votes = mapVotes ?? new Dictionary<string, int>();
-    }
 
+
+        // Use the provided mapInfos and mapVotes directly
+        MapVote.maps = mapInfos ?? new List<MapInfo>();
+        MapVote.votes = mapVotes ?? new Dictionary<string, int>();
+
+        // Set the static instance
+        MapVote.Instance = this;
+    }
 
     [ClientRpc]
     public static void UpdateMapVote(string serializedMapVotes)
@@ -89,10 +113,23 @@
         // Deserialize the JSON string back to a dictionary
         var deserializedVotes = JsonSerializer.Deserialize<Dictionary<string, int>>(serializedMapVotes);
 
-      Log.Info("Time called 2 was " + Time.Now);
+        Log.Info("Time called 2 was " + Time.Now);
 
         MapVote.votes = deserializedVotes;
 
+        // There can be a 0.1 - 2 second delay before the UI updates without this
+        MapVote.Instance?.StateHasChanged();
+    }
 
+    // Todo implement this
+    [ClientRpc]
+    public static void UpdateVoteTimeRemaining(float timeRemaining)
+    {
+        var formattedFloat  = timeRemaining.ToString("0.0");
+        Log.Info($"UI time remaining: {formattedFloat}");
+
+        MapVote.TimeRemaining = formattedFloat;
+        // UI doesn't update at all without this
+        MapVote.Instance?.StateHasChanged();
     }
 }

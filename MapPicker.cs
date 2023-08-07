@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+// using System.Timers;
 
 namespace MapPicker
 {
@@ -10,15 +11,22 @@ namespace MapPicker
   {
     public string MapName;
     public string MapId;
+
   }
 
   public static class Vote
   {
+    public static TimeSince timeSinceVoteStarted;
+    public static int VoteTime { get; set; }
 
     public static MapVote CurrentHud { get; private set; }
+    // public static Timer VoteTimer { get; private set; }
+
     private static Dictionary<string, string> ClientVotes = new Dictionary<string, string>();
     private static Dictionary<string, int> MapVotes = new Dictionary<string, int>();
     private static List<MapInfo> MapInfos = new List<MapInfo>(); // Changed to a list
+
+    private static bool voteInProgress = false;
 
     public static void Init(List<MapInfo> maps)
     {
@@ -31,22 +39,55 @@ namespace MapPicker
       }
     }
 
-    public static void BeginVote()
+    public static void BeginVote(int voteTime)
     {
-      Log.Info("Created Panel");
+      Log.Info("Begin Vote");
+      Vote.VoteTime = voteTime;
+      Vote.voteInProgress = true;
 
-      // Your existing code...
-      CurrentHud = new MapVote(
-        MapInfos,
-        MapVotes
-      );
-      Game.RootPanel = CurrentHud;
+      if (Game.IsClient)
+      {
+        // Your existing code...
+        CurrentHud = new MapVote(
+          MapInfos,
+          MapVotes
+        );
+        Game.RootPanel = CurrentHud;
+
+      }
+    }
+
+    [GameEvent.Tick.Server]
+    public static void OnTick()
+    {
+      if (!voteInProgress)
+      {
+        return;
+      }
+
+      if (timeSinceVoteStarted > Vote.VoteTime)
+      {
+        Log.Info($"Time since vote started: {timeSinceVoteStarted} has exceeded vote time: {Vote.VoteTime}");
+        EndVote();
+
+      }
+      else
+      {
+        var remainingTime = Vote.VoteTime - timeSinceVoteStarted;
+        Log.Info($"Time since vote started: {timeSinceVoteStarted} has not exceeded vote time: {Vote.VoteTime} remaining time: {remainingTime}");
+        MapVote.UpdateVoteTimeRemaining(remainingTime);
+      }
     }
 
     public static void EndVote()
     {
       Log.Info("Removed Panel");
-      Game.RootPanel.DeleteChildren();
+      // Todo find correct way to remove panel
+      Game.RootPanel = null;
+
+      Vote.voteInProgress = false;
+      var mapWithMostVotes = GetMapWithMostVotes();
+      Event.Run("MapPicker.VoteFinished", mapWithMostVotes.MapId);
     }
 
     [ConCmd.Server]
@@ -115,6 +156,13 @@ namespace MapPicker
     public static List<MapInfo> GetMaps() // Changed the return type to List<MapInfo>
     {
       return MapInfos; // Return the list directly
+    }
+
+    // Implement a method to get map with most votes using MapVotes
+    public static MapInfo GetMapWithMostVotes()
+    {
+      var mapWithMostVotes = MapVotes.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
+      return MapInfos.Find(map => map.MapId == mapWithMostVotes);
     }
 
     public static int GetVoteCount(string mapId)
