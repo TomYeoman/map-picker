@@ -82,11 +82,7 @@ namespace MapPicker
                                      // increment vote count for the new voted map
       MapVotes[mapId]++;
 
-
-      // MapVote.UpdateMapVote(
-      //   MapVotes
-      // );
-
+      Log.Info("Time called 1 was" + Time.Now);
       string serializedMapVotes = JsonSerializer.Serialize(MapVotes);
       MapVote.UpdateMapVote(serializedMapVotes);
 
