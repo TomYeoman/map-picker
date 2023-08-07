@@ -1,27 +1,27 @@
-Easily add a map vote at the end of your game (or whenever you wish) with the map picker library. 
+Easily add a map vote at the end of your game (or whenever you wish) with the map picker library.
 
 ```c#
-    
+
 // Define maps.
 List<MapPicker.MapInfo> maps = new List<MapPicker.MapInfo>()
     {
-        new MapPicker.MapInfo(){ MapName = "Dust II", MapId = "dust2" },
-        new MapPicker.MapInfo(){ MapName = "Inferno", MapId = "inferno" },
-        new MapPicker.MapInfo(){ MapName = "Nuke", MapId = "nuke" }
+        new MapPicker.MapInfo(){ Name = "Dust II", Id = "dust2" },
+        new MapPicker.MapInfo(){ Name = "Inferno", Id = "inferno" },
+        new MapPicker.MapInfo(){ Name = "Nuke", Id = "nuke" }
     };
 
 // Assign maps.
 Vote.Init( maps );
 
 // Begin vote when you're ready, providing the time in seconds you wish the vote to run for.
-// This will display map vote UI on all connected clients. 
+// This will display map vote UI on all connected clients.
 Vote.BeginVote( 10 );
 
-// Subscribe to completion event to retrieve the map ID that was top voted. 
+// Subscribe to completion event to retrieve the map ID that was top voted.
 [Event( "MapPicker.VoteFinished" )]
-public void OnVoteFinished( string mapId )
+public void OnVoteFinished( string Id )
 {
-  Log.Info( $"MapPicker.VoteFinished: {mapId}" );
+  Log.Info( $"MapPicker.VoteFinished: {Id}" );
 }
 ```
 

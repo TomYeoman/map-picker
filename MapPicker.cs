@@ -7,9 +7,9 @@ namespace MapPicker
 {
   public struct MapInfo
   {
-    public string MapName;
-    public string MapId;
-    public string MapImage;
+    public string Name;
+    public string Id;
+    public string ImageURL;
   }
 
   public static class Vote
@@ -33,7 +33,7 @@ namespace MapPicker
       foreach (var map in maps)
       {
         MapInfos.Add(map); // Use Add() method to add maps to the list
-        MapVotes[map.MapId] = 0;
+        MapVotes[map.Id] = 0;
       }
     }
 
@@ -77,12 +77,12 @@ namespace MapPicker
     {
       Vote.voteInProgress = false;
       var mapWithMostVotes = GetMapWithMostVotes();
-      Event.Run("MapPicker.VoteFinished", mapWithMostVotes.MapId);
+      Event.Run("MapPicker.VoteFinished", mapWithMostVotes.Id);
       MapVote.EndVote();
     }
 
     [ConCmd.Server]
-    public static void VoteForMap(string mapId)
+    public static void VoteForMap(string Id)
     {
       var clientId = ConsoleSystem.Caller.ToString();
 
@@ -92,9 +92,9 @@ namespace MapPicker
         return;
       }
 
-      if (!MapInfos.Any(mapInfo => mapInfo.MapId == mapId))
+      if (!MapInfos.Any(mapInfo => mapInfo.Id == Id))
       {
-        Log.Info($"Invalid mapId: {mapId}");
+        Log.Info($"Invalid Id: {Id}");
         return;
       }
 
@@ -109,9 +109,9 @@ namespace MapPicker
         }
       }
 
-      ClientVotes[clientId] = mapId; // Save vote against the clientId
-                                     // increment vote count for the new voted map
-      MapVotes[mapId]++;
+      ClientVotes[clientId] = Id; // Save vote against the clientId
+                                  // increment vote count for the new voted map
+      MapVotes[Id]++;
       string serializedMapVotes = JsonSerializer.Serialize(MapVotes);
       MapVote.UpdateMapVote(serializedMapVotes);
 
@@ -123,8 +123,8 @@ namespace MapPicker
       var clientId = e.Client.ToString();
       if (ClientVotes.ContainsKey(clientId))
       {
-        var mapId = ClientVotes[clientId];
-        MapVotes[mapId]--;
+        var Id = ClientVotes[clientId];
+        MapVotes[Id]--;
         ClientVotes.Remove(clientId);
       }
     }
@@ -144,14 +144,14 @@ namespace MapPicker
     public static MapInfo GetMapWithMostVotes()
     {
       var mapWithMostVotes = MapVotes.Aggregate((l, r) => l.Value > r.Value ? l : r).Key;
-      return MapInfos.Find(map => map.MapId == mapWithMostVotes);
+      return MapInfos.Find(map => map.Id == mapWithMostVotes);
     }
 
-    public static int GetVoteCount(string mapId)
+    public static int GetVoteCount(string Id)
     {
-      if (MapVotes.ContainsKey(mapId))
+      if (MapVotes.ContainsKey(Id))
       {
-        return MapVotes[mapId];
+        return MapVotes[Id];
       }
 
       return 0;

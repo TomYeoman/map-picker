@@ -15,7 +15,7 @@
         width: 80vw;
         height: 80vh;
         margin:auto;
-        background-color: rgba(0,0,0,0.3);
+        background-color: rgba(0,0,0,0.8);
         padding-top: 25px;
         padding-left: 50px;
         padding-right: 50px;
@@ -43,7 +43,7 @@
 
     .map-container {
         flex-basis: 33.33%;
-        @* position: relative; *@
+        position: relative;
         @* background-image: url('https://picsum.photos/200'); *@
         background-size: cover;
         padding: 5px;
@@ -78,9 +78,9 @@
             {
                 @foreach (var map in MapVote.Maps.Skip(i).Take(3))
                 {
-                    <div @onclick=@( () => Vote.VoteForMap(map.MapId) ) class="map-container" style="background-image: url('@map.MapImage')">>
-                        <button class="map-button">@map.MapName</button>
-                        <span class="vote-count">@MapVote.Votes[map.MapId]</span>
+                    <div @onclick=@( () => Vote.VoteForMap(map.Id) ) class="map-container" style="background-image: url('@map.ImageURL')">
+                        <button class="map-button">@map.Name</button>
+                        <span class="vote-count">@MapVote.Votes[map.Id]</span>
                     </div>
                 }
             }
