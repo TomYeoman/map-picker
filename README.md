@@ -2,10 +2,10 @@ Easily add a map vote at the end of your game (or whenever you wish) with the ma
 
 ```c#
 
-// Define maps.
+// Define maps - ImageURL is optional.
 List<MapPicker.MapInfo> maps = new List<MapPicker.MapInfo>()
     {
-        new MapPicker.MapInfo(){ Name = "Dust II", Id = "dust2" },
+        new MapPicker.MapInfo(){ Name = "Dust II", Id = "dust2" ImageURL="https://source.unsplash.com/random/200x200?sig=1" },
         new MapPicker.MapInfo(){ Name = "Inferno", Id = "inferno" },
         new MapPicker.MapInfo(){ Name = "Nuke", Id = "nuke" }
     };
@@ -26,7 +26,7 @@ public void OnVoteFinished( string Id )
 ```
 
 **Roadmap**
-- Add image support for maps.
+[x] Add image support for maps.
 - Add optional "Replay" or "Random" buttons.
 - Add maps on the fly as admin via CMD.
 - Ability to scale vote depending on client ID (useful for VIP, or scaling based on player level).

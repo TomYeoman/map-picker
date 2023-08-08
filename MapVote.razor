@@ -41,12 +41,16 @@
         overflow-y: scroll;
     }
 
-    .map-container {
+    .map-container-outer {
         flex-basis: 33.33%;
+    }
+
+    .map-container-inner {
         position: relative;
         @* background-image: url('https://picsum.photos/200'); *@
         background-size: cover;
         padding: 5px;
+        margin: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -78,9 +82,11 @@
             {
                 @foreach (var map in MapVote.Maps.Skip(i).Take(3))
                 {
-                    <div @onclick=@( () => Vote.VoteForMap(map.Id) ) class="map-container" style="background-image: url('@map.ImageURL')">
-                        <button class="map-button">@map.Name</button>
-                        <span class="vote-count">@MapVote.Votes[map.Id]</span>
+                    <div @onclick=@( () => Vote.VoteForMap(map.Id) ) class="map-container-outer" >
+                        <div style="background-image: url('@map.ImageURL')" class="map-container-inner" >
+                            <button class="map-button">@map.Name</button>
+                            <span class="vote-count">@MapVote.Votes[map.Id]</span>
+                        </div>
                     </div>
                 }
             }
@@ -94,7 +100,7 @@
     public static List<MapInfo> Maps { get; private set; }
     public static Dictionary<string, int> Votes { get; private set; }
     public static string TimeRemaining { get; private set; }
-    public static Panel CurrentControl;
+    @* public static Panel CurrentControl; *@
 
     public MapVote(List<MapInfo> mapInfos, Dictionary<string, int> mapVotes)
     {
@@ -104,7 +110,7 @@
 
         // Set the static instance
         MapVote.Instance = this;
-        MapPicker.MapVote.CurrentControl = this;
+        @* MapPicker.MapVote.CurrentControl = this; *@
     }
 
     [ClientRpc]
@@ -133,6 +139,6 @@
     [ClientRpc]
     public static void EndVote()
     {
-        MapPicker.MapVote.CurrentControl.Delete();
+        @* MapVote.Instance?.Delete(); *@
     }
 }
