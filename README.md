@@ -10,8 +10,12 @@ List<MapPicker.MapInfo> maps = new List<MapPicker.MapInfo>()
         new MapPicker.MapInfo(){ Name = "Nuke", Id = "nuke" }
     };
 
-// Assign maps.
-Vote.Init( maps );
+// Assign user maps.
+Vote.AddMapsFromList( maps );
+
+// Add maps from asset party
+await Vote.AddAssetPartyMapsUsingSearchString( "surf" );
+await Vote.AddAssetPartyMapsFromCollectionName( "xenthio.coolmaps" );
 
 // Begin vote when you're ready, providing the time in seconds you wish the vote to run for.
 // This will display map vote UI on all connected clients.
