@@ -1,4 +1,4 @@
-Easily add a map vote at the end of your game (or whenever you wish) with the map picker library. Supports both user defined map lists, and Asset.Party (experimental).
+Easily add a map vote at the end of your game (or whenever you wish) with the map picker library. Supports both user defined map lists, and Asset.Party!
 
 ### Usage Example
 
