@@ -24,7 +24,6 @@ namespace MapPicker
     public static int VoteTime { get; set; }
 
     public static MapVote CurrentHud { get; private set; }
-    // public static Timer VoteTimer { get; private set; }
 
     private static Dictionary<string, string> ClientVotes = new Dictionary<string, string>();
     private static Dictionary<string, int> MapVotes = new Dictionary<string, int>();
@@ -45,64 +44,38 @@ namespace MapPicker
       }
     }
 
-    public static async Task AddAssetPartyMaps(string filter)
+    public static async Task AddAssetPartyMapsUsingSearchString(string filter)
     {
+      var query = $"type:map {filter}";
+      var result = await Package.FindAsync(query, 100);
+      Log.Info($"Found {result} packages");
 
-      try
+      foreach (var package in result.Packages)
       {
-        Log.Info("Adding Asset Party maps");
+        MapInfos.Add(new MapInfo { Name = package.Title, Id = package.FullIdent, ImageURL = package.Thumb });
+        MapVotes[package.FullIdent] = 0;
+      }
+    }
 
-        string html = await Http.RequestStringAsync("https://asset.party/t/map/popular?q=surf");
-        // string html = await httpClient.GetStringAsync(url);
+    public static async Task AddAssetPartyMapsFromCollectionName(string filter)
+    {
+      var query = $"type:collection";
+      var result = await Package.FindAsync(query, 100);
+      Log.Info($"Found {result} packages");
 
-        // Be aware that the HTML received from the server must be well-formed like XML.
-        // Otherwise, the LoadXml method will throw an exception.
-
-        // Log.Info("HTML res: " + html);
-
-        List<MapInfo> assetPartyMapsInfo = new List<MapInfo>();
-
-        // Extracting package cards from HTML
-        var cardPattern = @"<div class=""packagecard"">([\s\S]+?)</div>\s*</div>\s*</div>";
-        var cardMatches = Regex.Matches(html, cardPattern);
-
-        foreach (Match cardMatch in cardMatches)
+      foreach (var package in result.Packages)
+      {
+        if (package.FullIdent == filter)
         {
-          string cardContent = cardMatch.Groups[1].Value;
 
-          // Extracting Name
-          var namePattern = @"<div class=""nowrap title"">\s*<a href="".+?"">(.+?)</a>";
-          string name = Regex.Match(cardContent, namePattern).Groups[1].Value;
-
-          // Extracting Id
-          var idPattern = @"<div class=""nowrap title"">\s*<a href=""/(.+?)"">";
-          string id = Regex.Match(cardContent, idPattern).Groups[1].Value.Replace('/', '.');
-
-          // Extracting ImageURL
-          var imagePattern = @"<div class=""image"">\s*<a href="".+?"">\s*<img\s*src=""(.+?)""";
-          string imageURL = Regex.Match(cardContent, imagePattern).Groups[1].Value;
-
-          assetPartyMapsInfo.Add(new MapInfo { Name = name, Id = id, ImageURL = imageURL });
+          foreach (var map in package.PackageReferences)
+          {
+            var fullMapDetail = await Package.Fetch(map, false);
+            MapInfos.Add(new MapInfo { Name = fullMapDetail.Title, Id = fullMapDetail.FullIdent, ImageURL = fullMapDetail.Thumb });
+            MapVotes[fullMapDetail.FullIdent] = 0;
+          }
         }
-
-        Log.Info("Found " + assetPartyMapsInfo.Count + " maps from Asset Party");
-        // Displaying the results
-        foreach (var mapInfo in assetPartyMapsInfo)
-        {
-          MapInfos.Add(mapInfo); // Use Add() method to add maps to the list
-          MapVotes[mapInfo.Id] = 0;
-        }
-
       }
-      catch (System.Net.Http.HttpRequestException e)
-      {
-        Log.Error($"Caught HTTP error fetching the data: {e.Message}");
-      }
-      catch (Exception e)
-      {
-        Log.Error($"Caught error exception: {e.Message}");
-      }
-
     }
 
     public static void BeginVote(int voteTime)
