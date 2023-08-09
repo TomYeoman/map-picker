@@ -3,10 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System;
-// using System.Net.Http;
-// using System.Xml;
-// using System.Threading.Tasks;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace MapPicker
@@ -22,9 +18,6 @@ namespace MapPicker
   {
     public static TimeSince timeSinceVoteStarted;
     public static int VoteTime { get; set; }
-
-    public static MapVote CurrentHud { get; private set; }
-
     private static Dictionary<string, string> ClientVotes = new Dictionary<string, string>();
     private static Dictionary<string, int> MapVotes = new Dictionary<string, int>();
     private static List<MapInfo> MapInfos = new List<MapInfo>(); // Changed to a list
@@ -34,12 +27,9 @@ namespace MapPicker
     public static void AddMapsFromList(List<MapInfo> maps)
     {
       Log.Info("Initializing maps in MapPicker");
-
-      // Displaying the results
       foreach (var mapInfo in maps)
       {
-        Log.Info($"Name: {mapInfo.Name}, Id: {mapInfo.Id}, ImageURL: {mapInfo.ImageURL}");
-        MapInfos.Add(mapInfo); // Use Add() method to add maps to the list
+        MapInfos.Add(mapInfo);
         MapVotes[mapInfo.Id] = 0;
       }
     }
@@ -48,7 +38,6 @@ namespace MapPicker
     {
       var query = $"type:map {filter}";
       var result = await Package.FindAsync(query, 100);
-      Log.Info($"Found {result} packages");
 
       foreach (var package in result.Packages)
       {
@@ -61,7 +50,6 @@ namespace MapPicker
     {
       var query = $"type:collection";
       var result = await Package.FindAsync(query, 100);
-      Log.Info($"Found {result} packages");
 
       foreach (var package in result.Packages)
       {
@@ -100,7 +88,7 @@ namespace MapPicker
       if (Game.IsClient)
       {
         // Your existing code...
-        CurrentHud = new MapVote(
+        new MapVote(
           MapInfos,
           MapVotes
         );
@@ -165,13 +153,10 @@ namespace MapPicker
         }
       }
 
-      ClientVotes[clientId] = Id; // Save vote against the clientId
-                                  // increment vote count for the n
-                                  // increment vote count for the new voted map
+      ClientVotes[clientId] = Id;
       MapVotes[Id]++;
       string serializedMapVotes = JsonSerializer.Serialize(MapVotes);
       MapVote.UpdateMapVote(serializedMapVotes);
-
     }
 
     [GameEvent.Server.ClientDisconnect]
@@ -189,12 +174,13 @@ namespace MapPicker
     [GameEvent.Server.ClientJoined]
     private static void ClientJoined(ClientJoinedEvent e)
     {
-      var clientId = e.Client.ToString();
-    }
-
-    public static List<MapInfo> GetMaps() // Changed the return type to List<MapInfo>
-    {
-      return MapInfos; // Return the list directly
+      if (voteInProgress)
+      {
+        new MapVote(
+                  MapInfos,
+                  MapVotes
+                );
+      }
     }
 
     // Implement a method to get map with most votes using MapVotes
